@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai4one"
+version = "0.0.1a2"
+authors = [
+  { name="bestenevoy", email="bestenevoy@outlook.com" },
+]
+description = "A small machine learning package"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy",
+]
+
+[project.urls]
+Homepage = "https://github.com/bestenevoy/ai4one"
+Issues = "https://github.com/bestenevoy/ai4one/issues"
