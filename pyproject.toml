@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ai4one"
-version = "0.0.1a2"
+version = "0.0.2a1"
 authors = [
   { name="bestenevoy", email="bestenevoy@outlook.com" },
 ]
@@ -18,8 +18,12 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
+    "typer"
 ]
 
 [project.urls]
 Homepage = "https://github.com/bestenevoy/ai4one"
 Issues = "https://github.com/bestenevoy/ai4one/issues"
+
+[project.scripts]
+ai4one = "ai4one.cli:app"
