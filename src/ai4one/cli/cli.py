@@ -3,22 +3,32 @@ import typer
 import subprocess
 from rich import print
 
-app = typer.Typer()
+app = typer.Typer(no_args_is_help=True)
+
+
+@app.callback()
+def callback():
+    """
+    Awesome AI CLI tool under development.
+    """
+    pass
 
 
 @app.command(name="gpu")
 def nvidia_info():
-    """查看 gpu 驱动信息 和 pytorch 版本"""
+    """
+    Check GPU driver information and PyTorch version.
+    """
     result = subprocess.run(
         ["nvidia-smi"],
-        stdout=subprocess.PIPE,  # 捕获标准输出
-        stderr=subprocess.PIPE,  # 捕获错误输出
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         text=True,  # 返回文本（字符串）而不是字节
     )
     output = result.stdout
     error_output = result.stderr
     if result.returncode == 0:
-        content = "\r\n".join(output.splitlines()[1:12])  # 截取前5行
+        content = "\r\n".join(output.splitlines()[1:12])
         first_line = output.splitlines()[0]
         lenght = len(output.splitlines()[3])
         print("INFO".center(lenght, "="))
@@ -37,8 +47,10 @@ def nvidia_info():
 
 
 @app.command()
-def test(name: str = typer.Option(None, "--name", "-n", help="测试参数")):
-    """this is test"""
+def test(name: str = typer.Option(None, "--name", "-n", help="this is a test param")):
+    """
+    this is test
+    """
     print("It looks like it's correct.")
 
 
