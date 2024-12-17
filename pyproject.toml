@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ai4one"
-version = "0.0.2a2"
+version = "0.0.3a1"
 authors = [
   { name="bestenevoy", email="bestenevoy@outlook.com" },
 ]
