@@ -1,4 +1,6 @@
 import json
+import os
+from typing import Optional
 
 
 def load_json(file_path, encoding="utf-8"):
@@ -52,3 +54,35 @@ def dump_json(data, file_path, indent=2):
     except Exception as e:
         print(f"Error: Failed to write to file '{file_path}'. {str(e)}")
         return False
+
+
+
+
+def read_file(
+    path: str,
+    encoding: str = 'utf8',
+    lines: Optional[int] = None
+) -> str:
+    """读取文件内容（始终返回字符串）
+    
+    Args:
+        path: 文件路径
+        encoding: 文件编码 (默认utf8)
+        lines: 读取行数(None读全部，n读指定行数)
+    
+    Returns:
+        拼接后的字符串（保留换行符）
+        
+    Raises:
+        FileNotFoundError: 文件不存在
+        UnicodeDecodeError: 编码错误
+    """
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"文件不存在: {path}")
+
+    with open(path, 'r', encoding=encoding) as f:
+        if lines is None:
+            return f.read()
+        
+        # 读取指定行数并拼接为字符串
+        return ''.join(line for i, line in enumerate(f) if i < lines)
