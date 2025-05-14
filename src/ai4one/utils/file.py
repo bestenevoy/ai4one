@@ -1,5 +1,6 @@
-import json
 import os
+import json
+from pathlib import Path
 from typing import Optional
 
 
@@ -56,23 +57,17 @@ def dump_json(data, file_path, indent=2):
         return False
 
 
-
-
-def read_file(
-    path: str,
-    encoding: str = 'utf8',
-    lines: Optional[int] = None
-) -> str:
+def read_file(path: str, encoding: str = "utf8", lines: Optional[int] = None) -> str:
     """读取文件内容（始终返回字符串）
-    
+
     Args:
         path: 文件路径
         encoding: 文件编码 (默认utf8)
         lines: 读取行数(None读全部，n读指定行数)
-    
+
     Returns:
         拼接后的字符串（保留换行符）
-        
+
     Raises:
         FileNotFoundError: 文件不存在
         UnicodeDecodeError: 编码错误
@@ -80,9 +75,15 @@ def read_file(
     if not os.path.exists(path):
         raise FileNotFoundError(f"文件不存在: {path}")
 
-    with open(path, 'r', encoding=encoding) as f:
+    with open(path, "r", encoding=encoding) as f:
         if lines is None:
             return f.read()
-        
+
         # 读取指定行数并拼接为字符串
-        return ''.join(line for i, line in enumerate(f) if i < lines)
+        return "".join(line for i, line in enumerate(f) if i < lines)
+
+
+def get_work_dir(_file_: Optional[Path] = None) -> Path:
+    if _file_ is None:
+        return Path(os.getcwd())
+    return Path(_file_).parent
