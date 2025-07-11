@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ai4one"
-version = "0.0.16.250514"
+version = "0.0.20.250711"
 authors = [
   { name="bestenevoy", email="bestenevoy@outlook.com" },
 ]
@@ -18,6 +18,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
+    "openai>=0.8.0",
     "typer",
 ]
 
