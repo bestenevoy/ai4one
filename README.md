@@ -12,6 +12,13 @@ pip install ai4one
 
 Ensure you have Python 3.8+ and pip installed.
 
+## Develop
+
+```bash
+uv pip install -e ".[dev]"
+uv run -m pytest
+```
+
 ## Build
 
 ```
@@ -22,6 +29,7 @@ uv build
 
 ```
 python -m twine upload dist/*
+uv run twine upload dist/*
 ```
 
 ## Testing and Local Updates

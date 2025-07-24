@@ -1,5 +1,2 @@
 {
-    "python.languageServer": "None",
-    "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true
 }
