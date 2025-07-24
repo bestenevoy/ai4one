@@ -11,7 +11,7 @@ resolution-markers = [
 
 [[package]]
 name = "ai4one"
-version = "0.0.20.250711"
+version = "0.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "dataclasses-json" },
