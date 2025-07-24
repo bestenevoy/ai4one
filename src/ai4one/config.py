@@ -1,5 +1,6 @@
 from dataclasses import field, dataclass  # noqa
 from typing import Type, TypeVar, List  # noqa
+from pathlib import Path
 
 import tomllib
 from dataclasses_json import dataclass_json
@@ -19,17 +20,7 @@ def load_config(
 class BaseConfig:
     """配置基类，可以实现自动解析命令行参数 argument_parser, rom_file/to_file, from_json/to_json
 
-    通过继承此类，任何子类都会自动成为一个强大的配置对象，无需手动添加装饰器。
-
-    核心特性:
-    1.  **@dataclass 功能**: 自动生成 `__init__`, `__repr__` 等标准方法。
-    2.  **JSON 序列化**: 通过 `dataclasses-json` 自动获得与 JSON 互相转换的能力
-        (`to_json()`, `from_json()`)，并完美支持嵌套配置。
-    3.  **文件 I/O**: 提供便捷的 `to_file()` 和 `from_file()` 方法，用于读写 JSON 配置文件。
-    4.  **命令行集成**: `argument_parser()` 方法能自动将配置字段暴露为命令行参数，
-        轻松实现默认值覆盖。
-    5.  **类型安全**: 所有方法都具备严格的类型提示，确保静态分析和IDE自动补全的准确性。
-
+    一个支持 JSON, YAML, TOML 的多功能配置基类。
     ---
     ### 使用示例 1: 基础用法与文件操作
 
@@ -39,7 +30,7 @@ class BaseConfig:
     ...     host: str = "localhost"
     ...     port: int = 5432
     ...     user: str
-    
+
     保存和加载配置。
 
     >>> db_conf = DatabaseConfig(user="admin")
@@ -60,7 +51,7 @@ class BaseConfig:
     >>> class ModelConfig(BaseConfig):
     ...     name: str = "ResNet50"
     ...     embedding_dim: int = 256
-    
+
     然后，将它们组合成一个主配置类。使用 `dataclasses.field` 和 `default_factory`
     来确保每个子配置都能被正确初始化。
 
@@ -77,7 +68,7 @@ class BaseConfig:
     >>> print(main_conf.model.name)
     ResNet50
     >>> main_conf.to_file("config.json")
-    
+
     ---
     ### 使用示例 3: 命令行参数解析
 
@@ -109,15 +100,82 @@ class BaseConfig:
         dataclass(cls)
         dataclass_json(cls)
 
-    def to_file(self, file_path: str):
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(self.to_json(indent=2, ensure_ascii=False))
+    def to_file(self, file_path: str, **kwargs):
+        file_path_obj = Path(file_path)
+        file_path_obj.parent.mkdir(parents=True, exist_ok=True)
+
+        content = self.to_dict()  # 使用 dataclasses-json 的方法转换为字典
+
+        ext = file_path_obj.suffix
+        with open(file_path_obj, "w", encoding="utf-8") as f:
+            if ext == ".json":
+                import json
+
+                json.dump(content, f, indent=2, ensure_ascii=False, **kwargs)
+            elif ext in (".yaml", ".yml"):
+                try:
+                    import yaml
+                except ImportError:
+                    raise ImportError(
+                        "PyYAML is not installed. Please run 'pip install pyyaml'"
+                    )
+                yaml.dump(content, f, **kwargs)
+            elif ext == ".toml":
+                try:
+                    import toml
+                except ImportError:
+                    raise ImportError(
+                        "toml is not installed. Please run 'pip install toml'"
+                    )
+                toml.dump(content, f, **kwargs)
+            else:
+                raise ValueError(
+                    f"Unsupported file format: {ext}. Please use .json, .yaml, or .toml"
+                )
 
     @classmethod
     def from_file(cls: Type[T], file_path: str) -> T:
-        with open(file_path, "r", encoding="utf-8") as f:
-            cfg2 = cls.schema().loads(f.read())
-        return cfg2
+        """
+        从文件加载配置实例，根据文件扩展名自动选择格式。
+
+        Args:
+            file_path (str): 源文件路径 (e.g., 'config.json', 'config.yaml').
+
+        Returns:
+            一个填充了文件数据的配置类实例。
+        """
+        file_path_obj = Path(file_path)
+        if not file_path_obj.exists():
+            raise FileNotFoundError(f"Configuration file not found: {file_path}")
+
+        ext = file_path_obj.suffix
+        with open(file_path_obj, "r", encoding="utf-8") as f:
+            if ext == ".json":
+                import json
+
+                content = json.load(f)
+            elif ext in (".yaml", ".yml"):
+                try:
+                    import yaml
+                except ImportError:
+                    raise ImportError(
+                        "PyYAML is not installed. Please run 'pip install pyyaml'"
+                    )
+                content = yaml.safe_load(f)
+            elif ext == ".toml":
+                try:
+                    import toml
+                except ImportError:
+                    raise ImportError(
+                        "toml is not installed. Please run 'pip install toml'"
+                    )
+                content = toml.load(f)
+            else:
+                raise ValueError(
+                    f"Unsupported file format: {ext}. Please use .json, .yaml, or .toml"
+                )
+
+        return cls.from_dict(content)
 
     @classmethod
     def argument_parser(cls: Type[T]) -> T:

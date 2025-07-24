@@ -1,40 +1,91 @@
-# AI4One
 
-This is a small package for machine learning.
+# AI4One 🤖
+
+A small, modular package for machine learning.
+
+---
 
 ## Installation
 
-Install AI4One using pip:
 
 ```bash
 pip install ai4one
+````
+
+This package requires **Python 3.8** or newer.
+
+-----
+
+## Usage
+
+### ai4one.config
+The primary feature of this package is a powerful configuration system. For a comprehensive guide and examples, please see the **[Configuration System Guide](docs/config.md)**.
+
+```python
+from ai4one.config import BaseConfig
+from typing import List
+
+
+class TrainConfig(BaseConfig):
+    learning_rate: float = 0.001
+    epochs: int = 10
+    optimizer: str = "Adam"
+    layers: List[int] = [512, 256]
+
+
+if __name__ == "__main__":
+    config = TrainConfig.argument_parser()
+    print(f"Using optimizer: {config.optimizer}")
 ```
 
-Ensure you have Python 3.8+ and pip installed.
-
-## Develop
+You can also run the self-contained example to see it in action:
 
 ```bash
-uv pip install -e ".[dev]"
-uv run -m pytest
+examples/example_config.py
 ```
 
-## Build
+-----
 
-```
+## Development
+
+Interested in contributing? Set up your local development environment with `uv`.
+
+1.  **Clone the repository:**
+
+    ```bash
+    git clone https://github.com/bestenevoy/ai4one.git
+    cd ai4one
+    ```
+
+2.  **Create a virtual environment and install dependencies:**
+    This command installs all core, optional, and development dependencies.
+
+    ```bash
+    uv pip install -e ".[dev]"
+    ```
+
+    To keep your environment in sync with the lock file, you can run `uv sync`.
+
+3.  **Run tests:**
+
+    ```bash
+    uv run pytest
+    ```
+
+-----
+
+## Build and Publish
+
+These commands are for package maintainers.
+
+**Build the package:**
+
+```bash
 uv build
 ```
 
-## Publish to PyPI
+**Publish to PyPI:**
 
-```
-python -m twine upload dist/*
+```bash
 uv run twine upload dist/*
-```
-
-## Testing and Local Updates
-For development or testing, synchronize your local environment with:
-
-```
-uv sync
 ```
