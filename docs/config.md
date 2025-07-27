@@ -46,21 +46,21 @@ pip install ai4one[all]
 ### Defining a Configuration
 Simply inherit from `BaseConfig` and define your fields with type hints.
 
-```
-from ai4one.config import BaseConfig
+```python
+from ai4one.config import BaseConfig, field
 from typing import List
 
 class TrainConfig(BaseConfig):
     learning_rate: float = 0.001
     epochs: int = 10
     optimizer: str = "Adam"
-    layers: List[int] = [512, 256]
+    layers: List[int] = field(default_factory=list)
 ```
 
 ### Saving and Loading from Files
 The `to_file()` and `from_file()` methods automatically detect the file format based on the extension.
 
-```
+```python
 # Create an instance
 config = TrainConfig(optimizer="SGD")
 
@@ -77,7 +77,7 @@ print(loaded_config.optimizer)  # Output: SGD
 ## Command-Line Parsing
 Use the `argument_parser()` class method to parse command-line arguments.
 
-```
+```python
 # In your script (e.g., train.py)
 if __name__ == "__main__":
     config = TrainConfig.argument_parser()

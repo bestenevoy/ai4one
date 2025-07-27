@@ -22,16 +22,14 @@ This package requires **Python 3.8** or newer.
 The primary feature of this package is a powerful configuration system. For a comprehensive guide and examples, please see the **[Configuration System Guide](docs/config.md)**.
 
 ```python
-from ai4one.config import BaseConfig
+from ai4one.config import BaseConfig, field
 from typing import List
-
 
 class TrainConfig(BaseConfig):
     learning_rate: float = 0.001
     epochs: int = 10
     optimizer: str = "Adam"
-    layers: List[int] = [512, 256]
-
+    layers: List[int] = field(default_factory=list)
 
 if __name__ == "__main__":
     config = TrainConfig.argument_parser()

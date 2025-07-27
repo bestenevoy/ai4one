@@ -6,7 +6,7 @@ from typing import Literal, List
 
 # --- 使用示例 ---
 class DataConfig(BaseConfig):
-    name: str = "hahahah"
+    name: str = "hello"
     folds: List[int] = field(default_factory=list)
 
 
@@ -32,9 +32,9 @@ class TrainConfig(BaseConfig):
 
 class Config(BaseConfig):
 
-    data: DataConfig = field(default_factory=DataConfig)
-    model: ModelConfig = field(default_factory=ModelConfig)
-    train: TrainConfig = field(default_factory=TrainConfig)
+    data: DataConfig
+    model: ModelConfig
+    train: TrainConfig
 
     mode: Literal["train", "test", "predict"] = field(
         default="train",
