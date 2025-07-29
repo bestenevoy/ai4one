@@ -2,7 +2,7 @@ from dataclasses import field, dataclass  # noqa
 from typing import Type, TypeVar, List  # noqa
 from pathlib import Path
 
-import tomllib
+
 from dataclasses_json import dataclass_json
 from simple_parsing import ArgumentParser
 
@@ -13,6 +13,7 @@ T = TypeVar("T", bound="BaseConfig")
 def load_config(
     path: str,
 ):
+    import tomllib
     with open(path, mode="rb") as f:
         return tomllib.load(f)
 
