@@ -44,6 +44,29 @@ examples/example_config.py
 
 -----
 
+
+### ai4one.cli
+
+```bash
+ai4one gpu
+```
+
+Outputs:
+```
+--- CUDA Version ---
+12.7 
+
+--- PyTorch Version ---
+2.1.0+cu121
+
+--- Python Version ---
+Python 3.10.12
+
+--- Python Executable Path ---
+/usr/bin/python
+```
+
+
 ## Development
 
 Interested in contributing? Set up your local development environment with `uv`.

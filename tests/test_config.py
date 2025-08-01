@@ -13,8 +13,6 @@ def test_add():
 
 
 # --- 定义用于测试的配置类 ---
-
-
 class SimpleConfig(BaseConfig):
     name: str
     value: int = 10
@@ -55,11 +53,6 @@ class TestBaseConfig:
         assert config.test_list3 == [1, 2, 3]
         assert config.test_list4 == [2025, 8, 1]
         assert config.test_list5 == [4, 5, 6]
-
-        # 验证 to_json() 方法是否存在且工作正常
-        # json_str = config.to_json()
-        # assert '"name": "test_item"' in json_str
-        # assert '"value": 10' in json_str
 
     def test_file_io_cycle(self, tmp_path):
         """测试 to_file 和 from_file 的完整读写循环。
