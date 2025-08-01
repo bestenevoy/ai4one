@@ -29,7 +29,7 @@ class TrainConfig(BaseConfig):
     learning_rate: float = 0.001
     epochs: int = 10
     optimizer: str = "Adam"
-    layers: List[int] = field(default_factory=list)
+    layers: List[int] = [3, 3]
 
 if __name__ == "__main__":
     config = TrainConfig.argument_parser()

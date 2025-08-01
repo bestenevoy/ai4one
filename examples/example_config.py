@@ -1,13 +1,12 @@
 from dataclasses_json import config
-from ai4one.config import BaseConfig, field
-from marshmallow import fields, validate
+from ai4one.config import BaseConfig
 from typing import Literal, List
 
 
 # --- 使用示例 ---
 class DataConfig(BaseConfig):
     name: str = "hello"
-    folds: List[int] = field(default_factory=list)
+    folds: List[int]
 
 
 class ModelConfig(BaseConfig):
@@ -15,19 +14,7 @@ class ModelConfig(BaseConfig):
 
 
 class TrainConfig(BaseConfig):
-    device: Literal["auto", "gpu", "cpu"] = field(
-        default="auto",
-        metadata=config(
-            # 我们告诉 dataclasses-json，不要自己去猜这个字段怎么处理，
-            # 直接使用我们提供的 marshmallow 字段。
-            mm_field=fields.String(
-                # 这个字段必须是一个字符串
-                validate=validate.OneOf(
-                    ["auto", "gpu", "cpu"]
-                )  # 并且它的值必须是这三个选项之一
-            )
-        ),
-    )
+    device: Literal["auto", "gpu", "cpu"] = "auto"
 
 
 class Config(BaseConfig):
@@ -36,10 +23,7 @@ class Config(BaseConfig):
     model: ModelConfig
     train: TrainConfig
 
-    mode: Literal["train", "test", "predict"] = field(
-        default="train",
-        metadata=config(mm_field=str),
-    )
+    mode: Literal["train", "test", "predict"] = "train"
 
 
 if __name__ == "__main__":

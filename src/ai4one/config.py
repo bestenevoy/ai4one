@@ -1,13 +1,18 @@
-from dataclasses import field, dataclass  # noqa
-from typing import Type, TypeVar, List  # noqa
+from dataclasses import field, dataclass,asdict  # noqa
+from typing import Type, TypeVar, List, get_origin, Any, Dict  # noqa
 from pathlib import Path
-
-
 from dataclasses_json import dataclass_json
 from simple_parsing import ArgumentParser
 
 
 T = TypeVar("T", bound="BaseConfig")
+
+MUTABLE_TYPE_FACTORIES = {
+    list: list,
+    dict: dict,
+    set: set,
+    # str: str
+}
 
 
 def load_config(
@@ -16,6 +21,10 @@ def load_config(
     import tomllib
     with open(path, mode="rb") as f:
         return tomllib.load(f)
+
+
+def is_builtin_type(type_hint: Any) -> bool:
+    return type(type_hint) is type
 
 
 class BaseConfig:
@@ -59,8 +68,8 @@ class BaseConfig:
     >>> from dataclasses import field
     >>>
     >>> class MainConfig(BaseConfig):
-    ...     data: DataConfig = field(default_factory=DataConfig)
-    ...     model: ModelConfig = field(default_factory=ModelConfig)
+    ...     data: DataConfig
+    ...     model: ModelConfig
     ...     learning_rate: float = 0.001
 
     主配置可以作为一个整体进行序列化和反序列化。
@@ -97,15 +106,64 @@ class BaseConfig:
 
     def __init_subclass__(cls: Type, **kwargs):
         super().__init_subclass__(**kwargs)
+        no_default_names = []
+        sub_cls = []
+        if not hasattr(cls, "__annotations__"):
+            dataclass(cls)
+            dataclass_json(cls)
+            return
+
+        for name, type_hint in cls.__annotations__.copy().items():
+            
+            if type_hint is list:
+                cls.__annotations__[name] = List[Any]
+            elif type_hint is dict:
+                cls.__annotations__[name] = Dict[Any, Any]
+            elif type_hint is str:
+                # continue
+                pass
+
+            if isinstance(type_hint, type) and issubclass(type_hint, BaseConfig):
+                # issubclass() arg 1 must be a class
+                sub_cls.append((name, type_hint))
+                setattr(cls, name, field(default_factory=type_hint))
+                continue
+
+            is_has = hasattr(cls, name)
+            if not is_has:
+                no_default_names.append(name)
+                if not is_builtin_type(type_hint):
+                    _type_ = get_origin(type_hint)
+                    origin_value = _type_()
+                else:
+                    # 如果是内置类型
+                    _type_ = type_hint
+                    origin_value = type_hint()
+                setattr(cls, name, field(default_factory=lambda n=origin_value: n))
+            else:
+                origin_value = getattr(cls, name)
+                _type_ = type(origin_value)
+                type_hint_o = get_origin(type_hint)
+                # print('step111', name,_type_, _type_ in MUTABLE_TYPE_FACTORIES,'==', type_hint_o, origin_value)
+                if _type_ in MUTABLE_TYPE_FACTORIES:
+                    # NOTE: 不能写成 lambda: origin_value
+                    # 这样并没有捕获到当前的 origin_value，会被后面的值覆盖掉。
+                    setattr(cls, name, field(default_factory=lambda n=origin_value: n))
+                    continue
+                elif type_hint_o is not _type_:
+                    continue
 
         dataclass(cls)
         dataclass_json(cls)
+        cls.__no_default_names__ = no_default_names
+        cls.__sub_cls__ = sub_cls
 
     def to_file(self, file_path: str, **kwargs):
         file_path_obj = Path(file_path)
         file_path_obj.parent.mkdir(parents=True, exist_ok=True)
 
         content = self.to_dict()  # 使用 dataclasses-json 的方法转换为字典
+        # content = asdict(self)  # 使用 dataclasses-json 的方法转换为字典
 
         ext = file_path_obj.suffix
         with open(file_path_obj, "w", encoding="utf-8") as f:
@@ -183,4 +241,67 @@ class BaseConfig:
         parser = ArgumentParser()
         parser.add_arguments(cls, dest="config")
         args = parser.parse_args()
-        return args.config
+        ret = args.config
+        cls.check_no_default_names(ret)
+        return ret
+
+    @classmethod
+    def _collect_missing_fields(cls, instance: 'BaseConfig', prefix: str = "") -> List[str]:
+        """一个递归的辅助函数，用于收集所有缺失字段的完整路径。"""
+        missing_paths = []
+
+        # 1. 检查当前级别的必填字段
+        # 我们假设 __no_default_names__ 存储了没有默认值的字段名
+        for name in getattr(cls, '__no_default_names__', []):
+            # 检查属性值是否为 "falsy" (e.g., None, 0, "", [])
+            # 注意：如果 0 或 "" 是有效值，此检查可能需要调整
+            if not getattr(instance, name, None):
+                missing_paths.append(f"{prefix}{name}")
+
+        # 2. 递归检查所有子配置
+        # 我们假设 __sub_cls__ 存储了 (字段名, 子配置类) 的元组
+        for name, sub_cls in getattr(cls, '__sub_cls__', []):
+            sub_instance = getattr(instance, name)
+            # 将当前字段名加入前缀，并递归调用
+            sub_missing = sub_cls._collect_missing_fields(sub_instance, prefix=f"{prefix}{name}.")
+            missing_paths.extend(sub_missing)
+            
+        return missing_paths
+
+    @classmethod
+    def check_no_default_names(cls: Type[T], cls_instance: T):
+        """
+        检查实例及其子实例中所有必填字段是否已提供。
+        如果未提供，则打印一个包含所有缺失项的清晰错误信息，然后退出。
+        """
+        all_missing = cls._collect_missing_fields(cls_instance)
+
+        if all_missing:
+            # --- 错误信息主体部分 (与之前相同) ---
+            error_header = "❌ Error: The following required configuration parameters are missing or empty:"
+            error_list = "\n".join([f"  - {path}" for path in all_missing])
+            error_footer = "\nPlease provide them via the command line or in your configuration file."
+            import sys
+            # --- 新增：动态生成命令行示例 ---
+            try:
+                # 尝试获取当前运行的脚本名
+                script_name = Path(sys.argv[0]).name
+            except (IndexError, AttributeError):
+                script_name = "your_script.py"
+
+            # 将缺失的路径转换为命令行参数格式
+            # 例如 'data.path' -> '--data.path <VALUE>'
+            example_args = [f"--{path.split('.')[-1]} <YOUR_{path.upper().replace('.', '_')}_VALUE>" for path in all_missing]
+            
+            # 拼接成完整的命令
+            example_command = f"python {script_name} " + " ".join(example_args)
+            
+            example_section = (
+                f"\n💡 For example, you could provide the missing values like this:\n"
+                f"   {example_command}"
+            )
+
+            # --- 组合成最终的完整信息 ---
+            full_message = f"\n{error_header}\n{error_list}\n{error_footer}\n{example_section}\n"
+            
+            sys.exit(full_message)
