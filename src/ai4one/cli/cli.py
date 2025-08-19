@@ -36,6 +36,19 @@ def nvidia_info(
     Use --interval or -i to set the refresh interval (default: 2 seconds).
     """
 
+    # 检查 nvidia-smi 是否存在
+    def check_nvidia_smi():
+        try:
+            subprocess.run(
+                ["nvidia-smi", "--version"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,  # 如果命令返回非零状态码会抛出异常
+            )
+            return True
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return False
+
     # 清屏函数，跨平台支持
     def clear_screen():
         os.system("cls" if os.name == "nt" else "clear")
@@ -43,7 +56,6 @@ def nvidia_info(
     pytorch_info = ""
     try:
         import torch
-
         pytorch_info = f"PyTorch Version: {torch.__version__}\nCuda is available: {torch.cuda.is_available()}"
     except ImportError:
         pytorch_info = "[bold red]PyTorch is not installed.[/bold red]"
@@ -74,19 +86,17 @@ def nvidia_info(
             print("NVIDIA-SMI Error Output:")
             print(error_output)
 
-        # 打印 PyTorch 信息
-        print("\n" + pytorch_info)
-        # 打印 Python 信息
-        print("\n" + python_info)
-
         if refresh:
             print(
                 f"\n[italic cyan]Refreshing GPU info every {interval} seconds. Press Ctrl+C to exit.[/italic cyan]"
             )
-
+    NOT_NS = "[bold red]Error: nvidia-smi not found. Please ensure NVIDIA drivers are installed.[/bold red]"
     # 是否需要实时刷新
     if refresh:
         try:
+            if not check_nvidia_smi():
+                print(NOT_NS)
+                return
             while True:
                 clear_screen()
                 show_gpu_info()
@@ -94,7 +104,13 @@ def nvidia_info(
         except KeyboardInterrupt:
             print("\n[bold green]GPU monitoring stopped.[/bold green]")
     else:
-        show_gpu_info()
+        if not check_nvidia_smi():
+            print(NOT_NS)
+        else:
+            show_gpu_info()
+
+        print("\n" + pytorch_info)
+        print("\n" + python_info)
 
 
 @app.command()
