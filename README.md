@@ -19,6 +19,9 @@ This package requires **Python 3.8** or newer.
 ## Usage
 
 ### ai4one.config
+
+`3.9>=Python 版本>=3.7`, 请使用`pip isntall ai4one~=0.2`安装 `ai4one=0.2` 版本。 
+
 The primary feature of this package is a powerful configuration system. For a comprehensive guide and examples, please see the **[Configuration System Guide](docs/config.md)**.
 
 ```python
@@ -66,6 +69,22 @@ Python 3.10.12
 /usr/bin/python
 ```
 
+### ai4one.tools
+
+#### ai4one.tools.plt
+
+> 该模块提供了一些用于绘图的工具函数。
+
+1. `setup_fonts` 函数用于设置 matplotlib 字体，以支持中文字符。
+
+    主要用途是跨平台支持中文字符的显示。
+    - 默认配置为 `New Times Roman` 、`SimSun` 和 `SimHei` 两种字体。
+    - 使用详情查看 [tools.plt](docs/plt_tool.md)
+
+```python
+from ai4one.tools.plt import setup_fonts
+setup_fonts(["New Times Roman", "SimSun", "SimHei"])
+```
 
 ## Development
 

@@ -4,17 +4,20 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ai4one"
-version = "0.2.01"
+version = "0.3.1"
 authors = [{ name = "bestenevoy", email = "bestenevoy@outlook.com" }]
 description = "A small machine learning package"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
+keywords = ["ai", "machine-learning", "deep-learning", "plot-tools"]
+
 license = "MIT"
 classifiers = [
   "Programming Language :: Python :: 3",
   "Operating System :: OS Independent",
 ]
 dependencies = [
+  "mcp[cli]>=1.13.0",
   "openai>=0.8.0",
   "requests>=2.31.0",
   "simple-parsing>=0.1.5",
