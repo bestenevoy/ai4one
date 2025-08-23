@@ -9,7 +9,7 @@ authors = [{ name = "bestenevoy", email = "bestenevoy@outlook.com" }]
 description = "A small machine learning package"
 readme = "README.md"
 requires-python = ">=3.10"
-keywords = ["ai", "machine-learning", "deep-learning", "plot-tools"]
+keywords = ["ai", "machine-learning", "deep-learning", "plot-tools", "cli"]
 
 license = "MIT"
 classifiers = [
@@ -17,6 +17,7 @@ classifiers = [
   "Operating System :: OS Independent",
 ]
 dependencies = [
+  "dotenv>=0.9.9",
   "mcp[cli]>=1.13.0",
   "openai>=0.8.0",
   "requests>=2.31.0",
@@ -42,3 +43,9 @@ Issues = "https://github.com/bestenevoy/ai4one/issues"
 
 [project.scripts]
 ai4one = "ai4one.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"ai4one.mcp" = ["*.py"]
