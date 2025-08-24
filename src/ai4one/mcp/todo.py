@@ -26,10 +26,17 @@ DATA_DIR: Path = Path("~/ai4one/mcp/todo_store/").expanduser()
 
 def parse_args():
     parser = argparse.ArgumentParser(description="MCP Todo Server")
-    parser.add_argument("--port", type=int, default=50002, help="Server port (default: 50002)")
-    parser.add_argument("--host", default="0.0.0.0", help="Server host (default: 0.0.0.0)")
     parser.add_argument(
-        "--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"], help="Logging level"
+        "--port", type=int, default=50002, help="Server port (default: 50002)"
+    )
+    parser.add_argument(
+        "--host", default="0.0.0.0", help="Server host (default: 0.0.0.0)"
+    )
+    parser.add_argument(
+        "--log-level",
+        default="INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        help="Logging level",
     )
     parser.add_argument(
         "--data-dir",
@@ -46,12 +53,14 @@ def parse_args():
     try:
         args = parser.parse_args()
     except SystemExit:
+
         class Args:
             port = 50002
             host = "0.0.0.0"
             log_level = "INFO"
             data_dir = "~/ai4one/mcp/todo_store/"
             transport = "stdio"
+
         args = Args()
     return args
 
@@ -96,6 +105,7 @@ class TodoList:
 
 # Storage helpers
 
+
 def _list_path(list_id: str) -> Path:
     return DATA_DIR / f"{list_id}.json"
 
@@ -129,17 +139,22 @@ def _validate_status(status: Optional[str]) -> None:
     if status is None:
         return
     if status not in ALLOWED_STATUSES:
-        raise ValueError(f"Invalid status '{status}', allowed: {sorted(ALLOWED_STATUSES)}")
+        raise ValueError(
+            f"Invalid status '{status}', allowed: {sorted(ALLOWED_STATUSES)}"
+        )
 
 
 def _validate_priority(priority: Optional[str]) -> None:
     if priority is None:
         return
     if priority not in ALLOWED_PRIORITIES:
-        raise ValueError(f"Invalid priority '{priority}', allowed: {sorted(ALLOWED_PRIORITIES)}")
+        raise ValueError(
+            f"Invalid priority '{priority}', allowed: {sorted(ALLOWED_PRIORITIES)}"
+        )
 
 
 # MCP tools
+
 
 @mcp.tool()
 def create_todo_list(name: str, description: Optional[str] = None) -> dict:
@@ -147,7 +162,12 @@ def create_todo_list(name: str, description: Optional[str] = None) -> dict:
     list_id = str(uuid4())
     todo = TodoList(id=list_id, name=name, description=description)
     _save_list(todo)
-    return {"id": todo.id, "name": todo.name, "description": todo.description, "created_at": todo.created_at}
+    return {
+        "id": todo.id,
+        "name": todo.name,
+        "description": todo.description,
+        "created_at": todo.created_at,
+    }
 
 
 @mcp.tool()
@@ -171,7 +191,11 @@ def list_todo_lists() -> List[dict]:
         except Exception:
             # skip corrupted files
             continue
-    return sorted(items, key=lambda x: (x.get("updated_at") or "", x.get("created_at") or ""), reverse=True)
+    return sorted(
+        items,
+        key=lambda x: (x.get("updated_at") or "", x.get("created_at") or ""),
+        reverse=True,
+    )
 
 
 @mcp.tool()
@@ -192,7 +216,9 @@ def delete_todo_list(list_id: str) -> str:
 
 
 @mcp.tool()
-def rename_todo_list(list_id: str, name: str, description: Optional[str] = None) -> dict | str:
+def rename_todo_list(
+    list_id: str, name: str, description: Optional[str] = None
+) -> dict | str:
     """Rename or update the description of a todo list."""
     try:
         todo = _load_list(list_id)
@@ -326,6 +352,7 @@ def search_tasks(list_id: str, query: str) -> List[dict] | str:
 
 
 # Server runner (similar options to local_file.py)
+
 
 def run_server():
     import anyio

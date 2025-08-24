@@ -14,11 +14,29 @@ work_dir: Path = Path(__file__).parent / "work_dir"
 def parse_args():
     """Parse command line arguments for MCP server."""
     parser = argparse.ArgumentParser(description="MCP Server")
-    parser.add_argument("--port", type=int, default=50001, help="Server port (default: 50001)")
-    parser.add_argument("--host", default="0.0.0.0", help="Server host (default: 0.0.0.0)")
-    parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"], help="Logging level (default: INFO)")
-    parser.add_argument("--work-dir", default="~/ai4one/mcp/work_dir/", help="Work directory (default: ~/ai4one/mcp/work_dir/)")
-    parser.add_argument("--transport", default="stdio", choices=["stdio", "sse", "mcp", "streamable-http"], help="Transport protocol (default: sse)")
+    parser.add_argument(
+        "--port", type=int, default=50001, help="Server port (default: 50001)"
+    )
+    parser.add_argument(
+        "--host", default="0.0.0.0", help="Server host (default: 0.0.0.0)"
+    )
+    parser.add_argument(
+        "--log-level",
+        default="INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        help="Logging level (default: INFO)",
+    )
+    parser.add_argument(
+        "--work-dir",
+        default="~/ai4one/mcp/work_dir/",
+        help="Work directory (default: ~/ai4one/mcp/work_dir/)",
+    )
+    parser.add_argument(
+        "--transport",
+        default="stdio",
+        choices=["stdio", "sse", "mcp", "streamable-http"],
+        help="Transport protocol (default: sse)",
+    )
 
     try:
         args = parser.parse_args()
