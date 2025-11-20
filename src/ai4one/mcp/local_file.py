@@ -135,14 +135,9 @@ def read_file(file_path: str) -> str:
     Returns:
         File content.
     """
-    content = ""
-    try:
-        file_path = os.path.join(work_dir, file_path)
-        with open(file_path, "r", encoding="utf-8") as f:
-            content = f.read()
-        return content
-    except Exception as e:
-        return f"Failure: {e}"
+    from ..utils.file import read_file as rf
+    file_path = os.path.join(work_dir, file_path)
+    return rf(file_path)
 
 
 @mcp.tool()

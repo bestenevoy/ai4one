@@ -1,2 +1,11 @@
 {
+    "python.languageServer": "Pylance",
+    "files.exclude": {
+        "**/.git": true,
+        "**/.venv": true,
+        "**/.DS_Store": true,
+        "**/.pytest_cache": true,
+        "**/node_modules": true,
+        "**/__pycache__": true
+    }
 }
