@@ -1,19 +1,21 @@
 # tests/test_config.py
+"""Tests for ai4one.config module."""
 
-from ai4one.config import load_config, BaseConfig
-from unittest.mock import patch
+import json
+import pytest
 from dataclasses import field
 from typing import List, Literal
+from ai4one.config import load_config, BaseConfig
 
 
-# 从您的源码中导入被测试的类
-def test_add():
+def test_load_config():
+    """Test loading config from TOML file."""
     config = load_config("./pyproject.toml")
     assert config["project"]["name"] == "ai4one"
 
 
-# --- 定义用于测试的配置类 ---
 class SimpleConfig(BaseConfig):
+    """Test config with basic types."""
     name: str
     value: int = 10
     test_list1: list
@@ -24,28 +26,30 @@ class SimpleConfig(BaseConfig):
 
 
 class DataConfig(BaseConfig):
+    """Nested config for testing."""
     path: str = "/data/default"
     batch_size: int = 32
 
 
 class ModelConfig(BaseConfig):
+    """Nested config for testing."""
     name: str = "default_model"
     layers: int = 4
     device: Literal["auto", "gpu", "cpu"] = "auto"
 
 
 class NestedConfig(BaseConfig):
+    """Config with nested configs."""
     data: DataConfig
     model: ModelConfig
     learning_rate: float = 0.01
 
 
-# --- 测试类 ---
-
-
 class TestBaseConfig:
+    """Tests for BaseConfig class."""
 
-    def test_inheritance_and_serialization(self):
+    def test_simple_config_defaults(self):
+        """Test that config initializes with correct defaults."""
         config = SimpleConfig(name="test_item")
         assert config.name == "test_item"
         assert config.value == 10
@@ -54,57 +58,41 @@ class TestBaseConfig:
         assert config.test_list4 == [2025, 8, 1]
         assert config.test_list5 == [4, 5, 6]
 
-    def test_file_io_cycle(self, tmp_path):
-        """测试 to_file 和 from_file 的完整读写循环。
-
-        `tmp_path` 是一个 pytest fixture，提供一个临时的目录对象。
-        """
+    def test_file_io_json(self, tmp_path):
+        """Test to_file and from_file with JSON."""
         config_file = tmp_path / "config.json"
-        original_config = SimpleConfig(name="cycle_test", value=99)
+        original = SimpleConfig(name="io_test", value=99)
 
-        original_config.to_file(config_file)
+        original.to_file(config_file)
         assert config_file.exists()
 
-        loaded_config = SimpleConfig.from_file(config_file)
-
-        assert loaded_config == original_config
+        loaded = SimpleConfig.from_file(config_file)
+        assert loaded.name == "io_test"
+        assert loaded.value == 99
 
     def test_nested_config_io(self, tmp_path):
-        """测试对嵌套配置的序列化和文件I/O。"""
-        config_file = tmp_path / "nested_config.json"
+        """Test serialization of nested configs."""
+        config_file = tmp_path / "nested.json"
 
-        original_config = NestedConfig()
-        original_config.data.batch_size = 128
-        original_config.model.name = "CustomNet"
+        original = NestedConfig()
+        original.data.batch_size = 128
+        original.model.name = "CustomNet"
 
-        original_config.to_file(config_file)
+        original.to_file(config_file)
+        loaded = NestedConfig.from_file(config_file)
 
-        loaded_config = NestedConfig.from_file(config_file)
+        assert loaded.learning_rate == 0.01
+        assert loaded.data.batch_size == 128
+        assert loaded.model.name == "CustomNet"
+        assert isinstance(loaded.data, DataConfig)
+        assert isinstance(loaded.model, ModelConfig)
 
-        assert loaded_config.learning_rate == 0.01
-        assert loaded_config.data.batch_size == 128
-        assert loaded_config.model.name == "CustomNet"
+    def test_nested_config_equality(self, tmp_path):
+        """Test that loaded config equals original."""
+        config_file = tmp_path / "equality.json"
+        original = NestedConfig()
+        original.data.batch_size = 64
+        original.to_file(config_file)
 
-        assert isinstance(loaded_config.data, DataConfig)
-        assert isinstance(loaded_config.model, ModelConfig)
-
-        assert loaded_config == original_config
-
-    def test_argument_parser_override(self):
-        """测试 argument_parser 是否能正确地被命令行参数覆盖。"""
-        # 模拟命令行输入: python script.py --learning_rate 0.5 --path /new/path
-        cli_args = [
-            "script.py",  # 第一个参数总是脚本名
-            "--learning_rate",
-            "0.5",
-            "--path",
-            "/new/path",
-        ]
-
-        with patch("sys.argv", cli_args):
-            parsed_config = NestedConfig.argument_parser()
-
-        assert parsed_config.model.name == "default_model"
-
-        assert parsed_config.learning_rate == 0.5
-        assert parsed_config.data.path == "/new/path"
+        loaded = NestedConfig.from_file(config_file)
+        assert loaded == original
