@@ -1,131 +1,129 @@
+# AI4One
 
-# AI4One 🤖
+**A lightweight, modular toolkit for building AI-powered applications.**
 
-A small, modular package for machine learning.
-
----
+AI4One provides essential utilities for AI development: configuration management, MCP servers for agent tools, CLI commands, and time/file utilities.
 
 ## Installation
 
-
 ```bash
 pip install ai4one
-````
+```
 
-This package requires **Python 3.8** or newer.
+Requires Python 3.10+.
 
------
+## Features
 
-## Usage
+### Configuration System
 
-### ai4one.config
-
-`3.9>=Python 版本>=3.7`, 请使用`pip isntall ai4one~=0.2`安装 `ai4one=0.2` 版本。 
-
-The primary feature of this package is a powerful configuration system. For a comprehensive guide and examples, please see the **[Configuration System Guide](docs/config.md)**.
+Type-safe configuration with CLI parsing, file serialization (JSON/YAML/TOML), and nested config support.
 
 ```python
-from ai4one.config import BaseConfig, field
-from typing import List
+from ai4one.config import BaseConfig
+from ai4one.utils import field
+
+class ModelConfig(BaseConfig):
+    name: str = "gpt-4"
+    temperature: float = 0.7
 
 class TrainConfig(BaseConfig):
-    learning_rate: float = 0.001
+    model: ModelConfig
     epochs: int = 10
-    optimizer: str = "Adam"
-    layers: List[int] = [3, 3]
+    lr: float = 0.001
 
-if __name__ == "__main__":
-    config = TrainConfig.argument_parser()
-    print(f"Using optimizer: {config.optimizer}")
+# Parse from command line: python train.py --epochs 20 --model.name gpt-4o
+config = TrainConfig.argument_parser()
 ```
 
-You can also run the self-contained example to see it in action:
+### MCP Servers
+
+Built-in MCP (Model Context Protocol) servers for AI agents:
 
 ```bash
-examples/example_config.py
+# List available servers
+ai4one mcp list
+
+# Start a server
+ai4one mcp start todo
+ai4one mcp start file -t sse -p 8080
+ai4one mcp start world
+
+# Server info
+ai4one mcp info todo
 ```
 
------
+| Server | Description | Tools |
+|--------|-------------|-------|
+| `file` | File system operations | read, write, list, mkdir, run_command |
+| `todo` | Task management | CRUD operations with UUID lists |
+| `world` | Environment info | current time, system info |
 
-
-### ai4one.cli
+### CLI Commands
 
 ```bash
+# GPU info with PyTorch status
 ai4one gpu
+ai4one gpu -r -i 5  # refresh every 5 seconds
+
+# Generate call graph
+ai4one callgraph ./src -o graph.dot
 ```
 
-Outputs:
+### Time Utilities
+
+```python
+from ai4one.utils import now_iso, parse_datetime, humanize_delta, sleep_until
+
+# Current time
+now_iso()  # "2024-01-15T10:30:00.123Z"
+
+# Parse flexible datetime strings
+parse_datetime("tomorrow")
+parse_datetime("+2h")  # 2 hours from now
+parse_datetime("2024-01-15 10:00")
+
+# Human-friendly durations
+humanize_delta(3661)  # "1h1m1s"
+
+# Sleep until a specific time
+sleep_until("tomorrow 09:00")
 ```
---- CUDA Version ---
-12.7 
 
---- PyTorch Version ---
-2.1.0+cu121
+### Plotting Fonts
 
---- Python Version ---
-Python 3.10.12
-
---- Python Executable Path ---
-/usr/bin/python
-```
-
-### ai4one.tools
-
-#### ai4one.tools.plt
-
-> 该模块提供了一些用于绘图的工具函数。
-
-1. `setup_fonts` 函数用于设置 matplotlib 字体，以支持中文字符。
-
-    主要用途是跨平台支持中文字符的显示。
-    - 默认配置为 `New Times Roman` 、`SimSun` 和 `SimHei` 两种字体。
-    - 使用详情查看 [tools.plt](docs/plt_tool.md)
+Auto-configure matplotlib for Chinese + English fonts:
 
 ```python
 from ai4one.tools.plt import setup_fonts
-setup_fonts(["New Times Roman", "SimSun", "SimHei"])
+
+setup_fonts(["Times New Roman", "SimHei"])
+```
+
+## Project Structure
+
+```
+ai4one/
+├── config.py          # Configuration base class
+├── cli/               # CLI commands (gpu, mcp, callgraph)
+├── mcp/               # MCP servers (file, todo, world)
+├── tools/             # PyTorch utils, plotting, call graph
+├── agent/             # Agent framework base classes
+├── utils/             # Time, file, and helper utilities
+└── notifier.py        # Email notification
 ```
 
 ## Development
 
-Interested in contributing? Set up your local development environment with `uv`.
-
-1.  **Clone the repository:**
-
-    ```bash
-    git clone https://github.com/bestenevoy/ai4one.git
-    cd ai4one
-    ```
-
-2.  **Create a virtual environment and install dependencies:**
-    This command installs all core, optional, and development dependencies.
-
-    ```bash
-    uv pip install -e ".[dev]"
-    ```
-
-    To keep your environment in sync with the lock file, you can run `uv sync`.
-
-3.  **Run tests:**
-
-    ```bash
-    uv run pytest
-    ```
-
------
-
-## Build and Publish
-
-These commands are for package maintainers.
-
-**Build the package:**
-
 ```bash
-uv build
+# Clone and install dev dependencies
+git clone https://github.com/bestenevoy/ai4one.git
+cd ai4one
+uv pip install -e ".[dev]"
+
+# Run tests
+uv run pytest
 ```
 
-**Publish to PyPI:**
+## License
 
-```bash
-uv run twine upload dist/*
-```
+MIT
