@@ -4,6 +4,7 @@ This package contains various MCP tools and servers for AI agents:
 - todo: TodoList management with CRUD operations
 - world_info: World information including time, location, and runtime environment
 - local_file: Local file operations
+- web: Web search and content fetching (DuckDuckGo, page extraction)
 """
 
-__all__ = ["todo", "world_info", "local_file"]
+__all__ = ["todo", "world_info", "local_file", "web"]

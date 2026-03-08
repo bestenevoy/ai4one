@@ -13,10 +13,18 @@ def test_mcp_list():
     assert "file" in result.stdout
     assert "todo" in result.stdout
     assert "world" in result.stdout
+    assert "web" in result.stdout
 
 
-def test_mcp_info():
-    """Test mcp info command."""
+def test_mcp_info_file():
+    """Test mcp info command for file server."""
+    result = runner.invoke(app, ["mcp", "info", "file"])
+    assert result.exit_code == 0
+    assert "file" in result.stdout.lower()
+
+
+def test_mcp_info_todo():
+    """Test mcp info command for todo server."""
     result = runner.invoke(app, ["mcp", "info", "todo"])
     assert result.exit_code == 0
     assert "todo" in result.stdout.lower()
@@ -28,6 +36,20 @@ def test_mcp_info_world():
     result = runner.invoke(app, ["mcp", "info", "world"])
     assert result.exit_code == 0
     assert "world" in result.stdout.lower()
+
+
+def test_mcp_info_web():
+    """Test mcp info command for web server."""
+    result = runner.invoke(app, ["mcp", "info", "web"])
+    assert result.exit_code == 0
+    assert "web" in result.stdout.lower()
+    assert "web_search" in result.stdout
+
+
+def test_mcp_info_unknown():
+    """Test mcp info with unknown server."""
+    result = runner.invoke(app, ["mcp", "info", "unknown"])
+    assert result.exit_code != 0
 
 
 def test_callgraph_missing_path():

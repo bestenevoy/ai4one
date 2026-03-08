@@ -23,6 +23,7 @@ SERVERS = {
     "file": str(SRC_DIR / "local_file.py"),
     "todo": str(SRC_DIR / "todo.py"),
     "world": str(SRC_DIR / "world_info.py"),
+    "web": str(SRC_DIR / "web.py"),
 }
 
 
@@ -155,6 +156,44 @@ class MCPValidator:
             print(f"  FAILED: {e}")
             return False
 
+    async def validate_web_server(self):
+        """Validate web server."""
+        print("\n[WEB SERVER]")
+        try:
+            session = await self.connect_to_server(SERVERS["web"], "web")
+
+            tools_response = await session.list_tools()
+            tools = [tool.name for tool in tools_response.tools]
+            print(f"    Tools: {tools}")
+
+            expected = {"web_search", "web_search_news", "web_fetch",
+                        "web_fetch_links", "url_info", "url_encode", "url_decode"}
+            missing = expected - set(tools)
+            if missing:
+                print(f"    Missing tools: {missing}")
+                return False
+
+            # Test url_encode
+            result = await session.call_tool("url_encode", {"text": "hello world"})
+            encoded = result.content[0].text
+            print(f"    URL encode: 'hello world' -> {encoded}")
+
+            # Test url_decode
+            result = await session.call_tool("url_decode", {"encoded": encoded})
+            decoded = result.content[0].text
+            print(f"    URL decode: {encoded} -> '{decoded}'")
+
+            # Test url_info (quick check, no full fetch)
+            result = await session.call_tool("url_info", {"url": "https://example.com"})
+            info = json.loads(result.content[0].text)
+            print(f"    URL info: {info.get('domain', 'N/A')}")
+
+            print("  PASSED")
+            return True
+        except Exception as e:
+            print(f"  FAILED: {e}")
+            return False
+
     async def run_validation(self):
         """Run full validation."""
         print("=" * 50)
@@ -165,6 +204,7 @@ class MCPValidator:
             "file": await self.validate_file_server(),
             "todo": await self.validate_todo_server(),
             "world": await self.validate_world_server(),
+            "web": await self.validate_web_server(),
         }
 
         print("\n" + "=" * 50)

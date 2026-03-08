@@ -12,7 +12,7 @@ from rich.table import Table
 
 from ..tools.visual_call_graph import ProjectAnalyzer
 
-app = typer.Typer(no_args_is_help=True, help="AI4One - AI Development Toolkit")
+app = typer.Typer(no_args_is_help=True, help="AI4One - AI Agent Toolkit")
 mcp_app = typer.Typer(
     help="MCP (Model Context Protocol) server management", no_args_is_help=True
 )
@@ -41,12 +41,26 @@ MCP_SERVERS = {
         "tools": ["get_base_world_info"],
         "default_port": 50003,
     },
+    "web": {
+        "description": "Web search (DuckDuckGo) and content fetching",
+        "tools": ["web_search", "web_search_news", "web_fetch", "web_fetch_links",
+                  "url_info", "url_encode", "url_decode"],
+        "default_port": 50004,
+    },
+}
+
+# Map server names to script filenames
+SCRIPT_MAP = {
+    "file": "local_file",
+    "todo": "todo",
+    "world": "world_info",
+    "web": "web",
 }
 
 
 @app.callback()
 def callback():
-    """AI4One - A modular AI development toolkit."""
+    """AI4One - AI Agent Toolkit with MCP servers and CLI tools."""
 
 
 @app.command(name="gpu")
@@ -170,12 +184,14 @@ def list_servers():
     table.add_column("Server", style="cyan")
     table.add_column("Description", style="green")
     table.add_column("Port", style="yellow")
+    table.add_column("Tools", style="dim")
     table.add_column("Status", style="dim")
 
     for name, config in MCP_SERVERS.items():
-        script = mcp_dir / f"{name if name != 'file' else 'local_file'}.py"
+        script = mcp_dir / f"{SCRIPT_MAP[name]}.py"
         status = "✅" if script.exists() else "❌"
-        table.add_row(name, config["description"], str(config["default_port"]), status)
+        table.add_row(name, config["description"], str(config["default_port"]),
+                      str(len(config["tools"])), status)
 
     console.print(table)
 
@@ -192,7 +208,7 @@ def start_server(
     Examples:
         ai4one mcp start file
         ai4one mcp start todo -t sse -p 8080
-        ai4one mcp start world -t mcp
+        ai4one mcp start web -t mcp
     """
     if server not in MCP_SERVERS:
         console.print(f"[red]Error: Unknown server '{server}'. Available: {', '.join(MCP_SERVERS.keys())}[/red]")
@@ -201,10 +217,7 @@ def start_server(
     import ai4one.mcp
     mcp_dir = Path(ai4one.mcp.__file__).parent
     config = MCP_SERVERS[server]
-
-    # Map server names to script filenames
-    script_map = {"file": "local_file", "todo": "todo", "world": "world_info"}
-    script_path = mcp_dir / f"{script_map[server]}.py"
+    script_path = mcp_dir / f"{SCRIPT_MAP[server]}.py"
 
     if not script_path.exists():
         console.print(f"[red]Error: Script not found: {script_path}[/red]")
@@ -221,12 +234,9 @@ def start_server(
 
     # Import and run the server
     try:
-        if server == "todo":
-            from ai4one.mcp.todo import run_server
-        elif server == "file":
-            from ai4one.mcp.local_file import run_server
-        elif server == "world":
-            from ai4one.mcp.world_info import run_server
+        module_name = SCRIPT_MAP[server]
+        server_module = __import__(f"ai4one.mcp.{module_name}", fromlist=["run_server"])
+        run_server = server_module.run_server
 
         original_argv = sys.argv.copy()
         sys.argv = [script_path.name, "--transport", transport]
@@ -252,8 +262,7 @@ def server_info(server: str = typer.Argument(..., help=f"Server name: {', '.join
     import ai4one.mcp
     mcp_dir = Path(ai4one.mcp.__file__).parent
     config = MCP_SERVERS[server]
-    script_map = {"file": "local_file", "todo": "todo", "world": "world_info"}
-    script_path = mcp_dir / f"{script_map[server]}.py"
+    script_path = mcp_dir / f"{SCRIPT_MAP[server]}.py"
 
     # Info table
     table = Table(title=f"MCP Server: {server}")

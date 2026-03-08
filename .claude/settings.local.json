@@ -3,7 +3,9 @@
     "allow": [
       "Bash(uv run:*)",
       "Bash(find:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(uv pip:*)",
+      "Bash(uv sync:*)"
     ]
   }
 }
